@@ -108,9 +108,25 @@ void GeneticAlgorithm::copyPopulation(int ** from, int ** to, int populationSize
 // *********************************************************************************************
 // Selects parents into selection based on roullete method using grades
 // *********************************************************************************************
-void GeneticAlgorithm::selectByRoullete(int * grades, int * selection)
+void GeneticAlgorithm::selectByRoullete(int * grades, int * selection, int populationSize)
 {
+	int gradesSum = 0;
+	int* tempGrades = new int[populationSize];
+	for (int i = 0; i < populationSize; i++) {
+		gradesSum += grades[i];
+		grades[i] = gradesSum;
+	}
+	std::uniform_int_distribution<std::mt19937::result_type> rulDist(1, gradesSum - 1);
 
+	for (int i = 0; i < populationSize; i++) {
+		int selected = rulDist(rng);
+		for (int j = 0 ; j < populationSize; j++) {
+			if (selected - grades[j] < 0) {
+				selection[i] = j;
+				break;
+			}
+		}
+	}
 }
 
 // *********************************************************************************************
@@ -186,7 +202,7 @@ void GeneticAlgorithm::solve(const int populationSize, const int iterations, con
 		// Selecting parents pairs
 		switch (selectionMode) {
 		case 1:
-			selectByRoullete(grades, selectedParents);
+			selectByRoullete(grades, selectedParents, populationSize);
 			break;
 		case 2:
 			break;

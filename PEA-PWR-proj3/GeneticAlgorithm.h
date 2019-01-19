@@ -17,7 +17,7 @@ private:
 	int gradeRoute(int * route);
 	void normalizeGrades(int * grades, int populationSize);
 	void copyPopulation(int** from, int** to, int populationSize);
-	void selectByRoullete(int * grades, int * selection);
+	void selectByRoullete(int * grades, int * selection, int populationSize);
 
 public:
 	GeneticAlgorithm();
