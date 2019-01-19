@@ -21,6 +21,9 @@ private:
 	void selectByRoullete(int * grades, int * selection, int populationSize);
 	void mutate(int * route, int populationSize);
 	void swapElements(int * route, int i, int j);
+	void crossOnePoint(int * routeA, int * routeB);
+	bool isOnList(vector<int> list, int number);
+	void copyRoute(int * from, int * to);
 
 public:
 	GeneticAlgorithm();
@@ -28,6 +31,8 @@ public:
 
 	int setSource(string filename);
 	string printSource();
+	string getShortestRoute();
+	int getShortestRouteValue();
 
 	void solve(const int populationSize, const int iterations, const double crossProb, const double mutProb, const int selectionMode = 1);
 };

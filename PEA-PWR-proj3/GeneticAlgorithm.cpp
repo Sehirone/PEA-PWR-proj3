@@ -107,7 +107,7 @@ void GeneticAlgorithm::copyPopulation(int ** from, int ** to, int * selectedPare
 }
 
 // *********************************************************************************************
-// Copies one population into another based on selected parents
+// Copies one population into another intact
 // *********************************************************************************************
 void GeneticAlgorithm::copyPopulationIntact(int ** from, int ** to, int populationSize)
 
@@ -145,7 +145,7 @@ void GeneticAlgorithm::selectByRoullete(int * grades, int * selection, int popul
 }
 
 // *********************************************************************************************
-// Mutates given route
+// Mutates given route by swapping two diffrent points
 // *********************************************************************************************
 void GeneticAlgorithm::mutate(int * route, int populationSize)
 {
@@ -170,6 +170,65 @@ void GeneticAlgorithm::swapElements(int * route, int i, int j)
 }
 
 // *********************************************************************************************
+// Crosses two populations w/ one crossing point
+// *********************************************************************************************
+void GeneticAlgorithm::crossOnePoint(int * routeA, int * routeB)
+{
+	// Create temp routes
+	int *tempRouteA = new int[cities.getNodesNumber()];
+	int *tempRouteB = new int[cities.getNodesNumber()];
+	copyRoute(routeA, tempRouteA);
+	copyRoute(routeB, tempRouteB);
+
+	// Generate crossing point
+	std::uniform_int_distribution<std::mt19937::result_type> dist(0, (cities.getNodesNumber() - 1));
+	int crossingPoint = dist(rng);
+
+	// Cross that based on elemnts already in route
+	std::vector<int> elementsInRouteA;
+	std::vector<int> elementsInRouteB;
+	for (int i = 0; i <= crossingPoint; i++) {
+		elementsInRouteA.push_back(tempRouteA[i]);
+		elementsInRouteB.push_back(tempRouteB[i]);
+	}
+	for (int i = 0, current = crossingPoint + 1; i < cities.getNodesNumber(); i++) {
+		if (!isOnList(elementsInRouteA, tempRouteB[i])) {
+			elementsInRouteA.push_back(tempRouteB[i]);
+			routeA[current] = tempRouteB[i];
+			current++;
+		}
+	}
+	for (int i = 0, current = crossingPoint + 1; i < cities.getNodesNumber(); i++) {
+		if (!isOnList(elementsInRouteB, tempRouteA[i])) {
+			elementsInRouteB.push_back(tempRouteA[i]);
+			routeB[current] = tempRouteA[i];
+			current++;
+		}
+	}
+
+	delete tempRouteA;
+	delete tempRouteB;
+}
+
+// *********************************************************************************************
+// Checks if given number is on a given list
+// *********************************************************************************************
+bool GeneticAlgorithm::isOnList(vector<int> list, int number)
+{
+	return (std::find(list.begin(), list.end(), number) != list.end());
+}
+
+// *********************************************************************************************
+// Copies one route into another
+// *********************************************************************************************
+void GeneticAlgorithm::copyRoute(int * from, int * to)
+{
+	for (int i = 0; i < cities.getNodesNumber(); i++) {
+		to[i] = from[i];
+	}
+}
+
+// *********************************************************************************************
 // Constructor - initializes random number generator
 // *********************************************************************************************
 GeneticAlgorithm::GeneticAlgorithm()
@@ -178,10 +237,13 @@ GeneticAlgorithm::GeneticAlgorithm()
 }
 
 // *********************************************************************************************
-// Empty destructor
+// Destructor - clears shortest route
 // *********************************************************************************************
 GeneticAlgorithm::~GeneticAlgorithm()
 {
+	if (shortestRoute != nullptr) {
+		delete[] shortestRoute;
+	}
 }
 
 // *********************************************************************************************
@@ -201,13 +263,37 @@ string GeneticAlgorithm::printSource()
 }
 
 // *********************************************************************************************
+// Prints stored shortest route
+// *********************************************************************************************
+string GeneticAlgorithm::getShortestRoute()
+{
+	if (cities.isEmpty() || shortestRoute == nullptr) {
+		return "No graph to solve!";
+	}
+	string temp = "";
+	for (int i = 0; i < cities.getNodesNumber(); i++) {
+		temp += to_string(shortestRoute[i]) + " -> ";
+	}
+	temp += to_string(shortestRoute[0]);
+	return temp;
+}
+
+// *********************************************************************************************
+// Getter for shortestRouteValue
+// *********************************************************************************************
+int GeneticAlgorithm::getShortestRouteValue()
+{
+	return shortestRouteValue == INT_MAX ? 0 : shortestRouteValue;
+}
+
+// *********************************************************************************************
 // Where the Magic takes place, solves TSP using genetic algorithm
-// Selection modes: 1 - Grades proportionate selection - IN DEVELOPMENT
+// Selection modes: 1 - Grades proportionate selection
 //					2 - Tournament selection - TO DO
 // *********************************************************************************************
 void GeneticAlgorithm::solve(const int populationSize, const int iterations, const double crossProb, const double mutProb, const int selectionMode)
 {
-	if (cities.isEmpty()) {
+	if (cities.isEmpty() || populationSize % 2 == 1 || populationSize > cities.getNodesNumber()) {
 		return;
 	}
 	// Init shortestroute/shortestroutevalue using greedy aproach
@@ -255,7 +341,7 @@ void GeneticAlgorithm::solve(const int populationSize, const int iterations, con
 		// Crossing first / Mutating later
 		for (int j = 0; j < populationSize/2; j++) {
 			if (happeningProb(rng) <= crossProb) {
-				// cross j*2 & (j*2) + 1
+				crossOnePoint(newPopulation[j * 2], newPopulation[(j * 2) + 1]);
 			}
 		}
 
@@ -270,17 +356,25 @@ void GeneticAlgorithm::solve(const int populationSize, const int iterations, con
 			grades[j] = gradeRoute(newPopulation[j]);
 		}
 		normalizeGrades(grades, populationSize);
-		for (int j = 0; j < populationSize; j++) { // test
-			cout << to_string(calculateRouteLength(newPopulation[j])) << ' ';
-		}
-		cout << endl; // test
+
 		// Copy new population into population
 		copyPopulationIntact(newPopulation, population, populationSize);
 	}
 
+	// set best solution
+	int bestGrade = INT_MAX * (-1);
+	int bestFromPop;
+	for (int i = 0; i < populationSize; i++) {
+		if (grades[i] > bestGrade) {
+			bestGrade = grades[i];
+			bestFromPop = i;
+		}
+	}
+	copyRoute(population[bestFromPop], shortestRoute);
+	shortestRouteValue = calculateRouteLength(shortestRoute);
 
 	// Cleanup grades
-	delete[] grades;
+	delete grades;
 	// Cleanup population
 	for (int i = 0; i < populationSize; i++) {
 		delete[] population[i];
@@ -289,6 +383,6 @@ void GeneticAlgorithm::solve(const int populationSize, const int iterations, con
 	for (int i = 0; i < populationSize; i++) {
 		delete[] newPopulation[i];
 	}
-	delete[] newPopulation;
-	delete[] selectedParents;
+	delete newPopulation;
+	delete selectedParents;
 }
