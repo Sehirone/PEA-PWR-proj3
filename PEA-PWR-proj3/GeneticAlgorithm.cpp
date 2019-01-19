@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "GeneticAlgorithm.h"
 #include <vector>
+#include <random>
 
 // *********************************************************************************************
 // Calculates length of a given route
@@ -20,14 +21,25 @@ int GeneticAlgorithm::calculateRouteLength(int * route)
 void GeneticAlgorithm::setRandomRoute(int * route) 
 {
 	std::vector<int> possibleCities;
-	for()
+	for (int i = 0; i < cities.getNodesNumber(); i++) {
+		possibleCities.push_back(i);
+	}
+	possibleCities.erase(possibleCities.begin() + startingNode);
+	route[0] = startingNode;
+
+	for (int i = 1; possibleCities.size() > 0; i++) {
+		int randomNum = std::uniform_int_distribution<std::mt19937::result_type>{ 0, possibleCities.size() - 1 }(rng);
+		route[i] = possibleCities[randomNum];
+		possibleCities.erase(possibleCities.begin() + randomNum);
+	}
 }
 
 // *********************************************************************************************
-// Empty constructor
+// Constructor - initializes random number generator
 // *********************************************************************************************
 GeneticAlgorithm::GeneticAlgorithm()
 {
+	rng.seed(std::random_device()());
 }
 
 // *********************************************************************************************
@@ -62,16 +74,17 @@ void GeneticAlgorithm::solve(const int populationSize)
 		return;
 	}
 
-	// Init 
+	// Init population
 	population = new int*[populationSize];
 	for (int i = 0; i < populationSize; i++) {
 		population[i] = new int[cities.getNodesNumber()];
+		setRandomRoute(population[i]);
 	}
 
 
 
 
-	// Cleanup
+	// Cleanup population
 	for (int i = 0; i < populationSize; i++) {
 		delete[] population[i];
 	}

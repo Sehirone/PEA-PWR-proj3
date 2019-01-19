@@ -1,5 +1,6 @@
 #pragma once
 #include "AdjacencyMatrix.h"
+#include <random>
 
 class GeneticAlgorithm
 {
@@ -9,6 +10,7 @@ private:
 	int shortestRouteValue = INT_MAX;
 	int** population = nullptr;
 	int startingNode = 0;
+	mt19937 rng;
 
 	int calculateRouteLength(int * route);
 	void setRandomRoute(int * route);
