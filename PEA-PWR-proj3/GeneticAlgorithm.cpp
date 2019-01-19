@@ -94,9 +94,23 @@ void GeneticAlgorithm::normalizeGrades(int * grades, int populationSize) {
 }
 
 // *********************************************************************************************
-// Copies one population into another
+// Copies one population into another based on selected parents
 // *********************************************************************************************
-void GeneticAlgorithm::copyPopulation(int ** from, int ** to, int populationSize)
+void GeneticAlgorithm::copyPopulation(int ** from, int ** to, int * selectedParents, int populationSize)
+
+{
+	for (int j = 0; j < populationSize; j++) {
+		for (int i = 0; i < cities.getNodesNumber(); i++) {
+			to[j][i] = from[selectedParents[j]][i];
+		}
+	}
+}
+
+// *********************************************************************************************
+// Copies one population into another based on selected parents
+// *********************************************************************************************
+void GeneticAlgorithm::copyPopulationIntact(int ** from, int ** to, int populationSize)
+
 {
 	for (int j = 0; j < populationSize; j++) {
 		for (int i = 0; i < cities.getNodesNumber(); i++) {
@@ -109,6 +123,7 @@ void GeneticAlgorithm::copyPopulation(int ** from, int ** to, int populationSize
 // Selects parents into selection based on roullete method using grades
 // *********************************************************************************************
 void GeneticAlgorithm::selectByRoullete(int * grades, int * selection, int populationSize)
+
 {
 	int gradesSum = 0;
 	int* tempGrades = new int[populationSize];
@@ -127,6 +142,31 @@ void GeneticAlgorithm::selectByRoullete(int * grades, int * selection, int popul
 			}
 		}
 	}
+}
+
+// *********************************************************************************************
+// Mutates given route
+// *********************************************************************************************
+void GeneticAlgorithm::mutate(int * route, int populationSize)
+{
+	int pointA = 0;
+	int pointB = 0;
+	std::uniform_int_distribution<std::mt19937::result_type> popDist(0, populationSize - 1);
+	while (pointA == pointB) {
+		pointA = popDist(rng);
+		pointB = popDist(rng);
+	}
+	swapElements(route, pointA, pointB);
+}
+
+// *********************************************************************************************
+// Swaps two elements in an array
+// *********************************************************************************************
+void GeneticAlgorithm::swapElements(int * route, int i, int j)
+{
+	int temp = route[i];
+	route[i] = route[j];
+	route[j] = temp;
 }
 
 // *********************************************************************************************
@@ -165,7 +205,7 @@ string GeneticAlgorithm::printSource()
 // Selection modes: 1 - Grades proportionate selection - IN DEVELOPMENT
 //					2 - Tournament selection - TO DO
 // *********************************************************************************************
-void GeneticAlgorithm::solve(const int populationSize, const int iterations, const int selectionMode)
+void GeneticAlgorithm::solve(const int populationSize, const int iterations, const double crossProb, const double mutProb, const int selectionMode)
 {
 	if (cities.isEmpty()) {
 		return;
@@ -185,7 +225,6 @@ void GeneticAlgorithm::solve(const int populationSize, const int iterations, con
 	for (int i = 0; i < populationSize; i++) {
 		newPopulation[i] = new int[cities.getNodesNumber()];
 	}
-	copyPopulation(population, newPopulation, populationSize);
 	int * selectedParents = new int[populationSize];
 
 	// Init grades
@@ -195,11 +234,14 @@ void GeneticAlgorithm::solve(const int populationSize, const int iterations, con
 	}
 	normalizeGrades(grades, populationSize);
 
+	// Distribution for crossing/mutation prob
+	std::uniform_real_distribution<double> happeningProb(0.0, 1.0);
+
 	// **********
 	// Main magic
 	// **********
 	for (int i = 0; i < iterations; i++) {
-		// Selecting parents pairs
+		// Selecting parents
 		switch (selectionMode) {
 		case 1:
 			selectByRoullete(grades, selectedParents, populationSize);
@@ -207,9 +249,21 @@ void GeneticAlgorithm::solve(const int populationSize, const int iterations, con
 		case 2:
 			break;
 		}
-		// Crossing / Mutating
-		
-		
+		// Create new population based on selected parents
+		copyPopulation(population, newPopulation, selectedParents, populationSize);
+
+		// Crossing first / Mutating later
+		for (int j = 0; j < populationSize/2; j++) {
+			if (happeningProb(rng) <= crossProb) {
+				// cross j*2 & (j*2) + 1
+			}
+		}
+
+		for (int j = 0; j < populationSize; j++) {
+			if (happeningProb(rng) <= mutProb) {
+				mutate(newPopulation[j], populationSize);
+			}
+		}
 		
 		// Grading new population
 		for (int j = 0; j < populationSize; j++) {
@@ -217,9 +271,11 @@ void GeneticAlgorithm::solve(const int populationSize, const int iterations, con
 		}
 		normalizeGrades(grades, populationSize);
 		for (int j = 0; j < populationSize; j++) { // test
-			cout << to_string(grades[j]) << ' ';
+			cout << to_string(calculateRouteLength(newPopulation[j])) << ' ';
 		}
 		cout << endl; // test
+		// Copy new population into population
+		copyPopulationIntact(newPopulation, population, populationSize);
 	}
 
 
