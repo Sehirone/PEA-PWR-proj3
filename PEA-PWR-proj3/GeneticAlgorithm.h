@@ -34,6 +34,6 @@ public:
 	string getShortestRoute();
 	int getShortestRouteValue();
 
-	void solve(const int populationSize, const int iterations, const double crossProb, const double mutProb, const int selectionMode = 1);
+	void solve(const int populationSize, const double crossProb, const double mutProb, int iterations = -1, const int selectionMode = 1);
 };
 

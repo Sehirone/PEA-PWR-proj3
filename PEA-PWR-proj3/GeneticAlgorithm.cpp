@@ -291,13 +291,15 @@ int GeneticAlgorithm::getShortestRouteValue()
 // Selection modes: 1 - Grades proportionate selection
 //					2 - Tournament selection - TO DO
 // *********************************************************************************************
-void GeneticAlgorithm::solve(const int populationSize, const int iterations, const double crossProb, const double mutProb, const int selectionMode)
+void GeneticAlgorithm::solve(const int populationSize, const double crossProb, const double mutProb, int iterations, const int selectionMode)
 {
 	if (cities.isEmpty() || populationSize % 2 == 1 || populationSize > cities.getNodesNumber()) {
 		return;
 	}
 	// Init shortestroute/shortestroutevalue using greedy aproach
 	initRoute();
+
+	iterations = cities.getNodesNumber() * 10;
 
 	// Init population
 	int** population;
@@ -371,7 +373,7 @@ void GeneticAlgorithm::solve(const int populationSize, const int iterations, con
 		}
 	}
 	copyRoute(population[bestFromPop], shortestRoute);
-	shortestRouteValue = calculateRouteLength(shortestRoute);
+	shortestRouteValue = calculateRouteLength(population[bestFromPop]);
 
 	// Cleanup grades
 	delete grades;
