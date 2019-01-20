@@ -206,8 +206,8 @@ void GeneticAlgorithm::crossOnePoint(int * routeA, int * routeB)
 		}
 	}
 
-	delete tempRouteA;
-	delete tempRouteB;
+	delete[] tempRouteA;
+	delete[] tempRouteB;
 }
 
 // *********************************************************************************************
@@ -299,7 +299,9 @@ void GeneticAlgorithm::solve(const int populationSize, const double crossProb, c
 	// Init shortestroute/shortestroutevalue using greedy aproach
 	initRoute();
 
-	iterations = cities.getNodesNumber() * 10;
+	if (iterations == -1) {
+		iterations = cities.getNodesNumber() * 10;
+	}
 
 	// Init population
 	int** population;
@@ -385,6 +387,6 @@ void GeneticAlgorithm::solve(const int populationSize, const double crossProb, c
 	for (int i = 0; i < populationSize; i++) {
 		delete[] newPopulation[i];
 	}
-	delete newPopulation;
-	delete selectedParents;
+	delete[] newPopulation;
+	delete[] selectedParents;
 }
