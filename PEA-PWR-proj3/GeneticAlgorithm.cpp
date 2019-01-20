@@ -170,7 +170,7 @@ void GeneticAlgorithm::swapElements(int * route, int i, int j)
 }
 
 // *********************************************************************************************
-// Crosses two populations w/ one crossing point
+// Crosses two populations w/ one crossing point - PMX: Partially - Mapped Crossover
 // *********************************************************************************************
 void GeneticAlgorithm::crossOnePoint(int * routeA, int * routeB)
 {
@@ -184,38 +184,33 @@ void GeneticAlgorithm::crossOnePoint(int * routeA, int * routeB)
 	std::uniform_int_distribution<std::mt19937::result_type> dist(0, (cities.getNodesNumber() - 1));
 	int crossingPoint = dist(rng);
 
-	// Cross that based on elemnts already in route
-	std::vector<int> elementsInRouteA;
-	std::vector<int> elementsInRouteB;
-	for (int i = 0; i <= crossingPoint; i++) {
-		elementsInRouteA.push_back(tempRouteA[i]);
-		elementsInRouteB.push_back(tempRouteB[i]);
+	// Cross that based on PMX - Partially - Mapped Crossover
+	for (int i = 0; i < crossingPoint; i++) {
+		int position = findInArray(routeA, tempRouteB[i]);
+		routeA[position] = routeA[i];
+		routeA[i] = tempRouteB[i];
 	}
-	for (int i = 0, current = crossingPoint + 1; i < cities.getNodesNumber(); i++) {
-		if (!isOnList(elementsInRouteA, tempRouteB[i])) {
-			elementsInRouteA.push_back(tempRouteB[i]);
-			routeA[current] = tempRouteB[i];
-			current++;
-		}
-	}
-	for (int i = 0, current = crossingPoint + 1; i < cities.getNodesNumber(); i++) {
-		if (!isOnList(elementsInRouteB, tempRouteA[i])) {
-			elementsInRouteB.push_back(tempRouteA[i]);
-			routeB[current] = tempRouteA[i];
-			current++;
-		}
+	for (int i = 0; i < crossingPoint; i++) {
+		int position = findInArray(routeB, tempRouteA[i]);
+		routeB[position] = routeB[i];
+		routeB[i] = tempRouteA[i];
 	}
 
-	delete[] tempRouteA;
-	delete[] tempRouteB;
+	delete tempRouteA;
+	delete tempRouteB;
 }
 
 // *********************************************************************************************
-// Checks if given number is on a given list
+// Find given number in an array - return its position
 // *********************************************************************************************
-bool GeneticAlgorithm::isOnList(vector<int> list, int number)
+int GeneticAlgorithm::findInArray(int * array, int number)
 {
-	return (std::find(list.begin(), list.end(), number) != list.end());
+	for (int i = 0; i < cities.getNodesNumber(); i++) {
+		if (array[i] == number) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 // *********************************************************************************************
@@ -387,6 +382,6 @@ void GeneticAlgorithm::solve(const int populationSize, const double crossProb, c
 	for (int i = 0; i < populationSize; i++) {
 		delete[] newPopulation[i];
 	}
-	delete[] newPopulation;
-	delete[] selectedParents;
+	delete newPopulation;
+	delete selectedParents;
 }

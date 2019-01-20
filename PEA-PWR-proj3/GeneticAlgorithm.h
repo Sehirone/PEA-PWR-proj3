@@ -22,7 +22,7 @@ private:
 	void mutate(int * route, int populationSize);
 	void swapElements(int * route, int i, int j);
 	void crossOnePoint(int * routeA, int * routeB);
-	bool isOnList(vector<int> list, int number);
+	int findInArray(int * array, int number);
 	void copyRoute(int * from, int * to);
 
 public:
