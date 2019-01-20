@@ -34,6 +34,7 @@ void GeneticAlgorithm::initRoute()
 		shortestRoute[i + 1] = chosen;
 	}
 
+	delete[] alreadyVisited;
 	shortestRouteValue = calculateRouteLength(shortestRoute);
 }
 
@@ -126,7 +127,6 @@ void GeneticAlgorithm::selectByRoullete(int * grades, int * selection, int popul
 
 {
 	int gradesSum = 0;
-	int* tempGrades = new int[populationSize];
 	for (int i = 0; i < populationSize; i++) {
 		gradesSum += grades[i];
 		grades[i] = gradesSum;
@@ -196,8 +196,8 @@ void GeneticAlgorithm::crossOnePoint(int * routeA, int * routeB)
 		routeB[i] = tempRouteA[i];
 	}
 
-	delete tempRouteA;
-	delete tempRouteB;
+	delete[] tempRouteA;
+	delete[] tempRouteB;
 }
 
 // *********************************************************************************************
@@ -295,7 +295,7 @@ void GeneticAlgorithm::solve(const int populationSize, const double crossProb, c
 	initRoute();
 
 	if (iterations == -1) {
-		iterations = cities.getNodesNumber() * 10;
+		iterations = cities.getNodesNumber() * cities.getNodesNumber() * 2;
 	}
 
 	// Init population
@@ -318,6 +318,18 @@ void GeneticAlgorithm::solve(const int populationSize, const double crossProb, c
 		grades[j] = gradeRoute(population[j]);
 	}
 	normalizeGrades(grades, populationSize);
+
+	// set current best solution as best
+	int bestGrade = INT_MAX * (-1);
+	int bestFromPop;
+	for (int i = 0; i < populationSize; i++) {
+		if (grades[i] > bestGrade) {
+			bestGrade = grades[i];
+			bestFromPop = i;
+		}
+	}
+	copyRoute(population[bestFromPop], shortestRoute);
+	shortestRouteValue = calculateRouteLength(population[bestFromPop]);
 
 	// Distribution for crossing/mutation prob
 	std::uniform_real_distribution<double> happeningProb(0.0, 1.0);
@@ -358,22 +370,26 @@ void GeneticAlgorithm::solve(const int populationSize, const double crossProb, c
 
 		// Copy new population into population
 		copyPopulationIntact(newPopulation, population, populationSize);
-	}
-
-	// set best solution
-	int bestGrade = INT_MAX * (-1);
-	int bestFromPop;
-	for (int i = 0; i < populationSize; i++) {
-		if (grades[i] > bestGrade) {
-			bestGrade = grades[i];
-			bestFromPop = i;
+		
+		// set new best solution if found
+		bestGrade = INT_MAX * (-1);
+		bestFromPop;
+		for (int j = 0; j < populationSize; j++) {
+			if (grades[j] > bestGrade) {
+				bestGrade = grades[j];
+				bestFromPop = j;
+			}
+		}
+		if (calculateRouteLength(population[bestFromPop]) < shortestRouteValue) {
+			copyRoute(population[bestFromPop], shortestRoute);
+			shortestRouteValue = calculateRouteLength(population[bestFromPop]);
+			cout << "iteration: " << i << " length: " << shortestRouteValue << endl;
 		}
 	}
-	copyRoute(population[bestFromPop], shortestRoute);
-	shortestRouteValue = calculateRouteLength(population[bestFromPop]);
+
 
 	// Cleanup grades
-	delete grades;
+	delete[] grades;
 	// Cleanup population
 	for (int i = 0; i < populationSize; i++) {
 		delete[] population[i];
@@ -382,6 +398,6 @@ void GeneticAlgorithm::solve(const int populationSize, const double crossProb, c
 	for (int i = 0; i < populationSize; i++) {
 		delete[] newPopulation[i];
 	}
-	delete newPopulation;
-	delete selectedParents;
+	delete[] newPopulation;
+	delete[] selectedParents;
 }
