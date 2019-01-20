@@ -147,11 +147,11 @@ void GeneticAlgorithm::selectByRoullete(int * grades, int * selection, int popul
 // *********************************************************************************************
 // Mutates given route by swapping two diffrent points
 // *********************************************************************************************
-void GeneticAlgorithm::mutate(int * route, int populationSize)
+void GeneticAlgorithm::mutate(int * route)
 {
 	int pointA = 0;
 	int pointB = 0;
-	std::uniform_int_distribution<std::mt19937::result_type> popDist(0, populationSize - 1);
+	std::uniform_int_distribution<std::mt19937::result_type> popDist(0, cities.getNodesNumber() - 1);
 	while (pointA == pointB) {
 		pointA = popDist(rng);
 		pointB = popDist(rng);
@@ -288,7 +288,7 @@ int GeneticAlgorithm::getShortestRouteValue()
 // *********************************************************************************************
 void GeneticAlgorithm::solve(const int populationSize, const double crossProb, const double mutProb, int iterations, const int selectionMode)
 {
-	if (cities.isEmpty() || populationSize % 2 == 1 || populationSize > cities.getNodesNumber()) {
+	if (cities.isEmpty() || populationSize % 2 == 1) {
 		return;
 	}
 	// Init shortestroute/shortestroutevalue using greedy aproach
@@ -334,6 +334,7 @@ void GeneticAlgorithm::solve(const int populationSize, const double crossProb, c
 		case 2:
 			break;
 		}
+
 		// Create new population based on selected parents
 		copyPopulation(population, newPopulation, selectedParents, populationSize);
 
@@ -343,13 +344,12 @@ void GeneticAlgorithm::solve(const int populationSize, const double crossProb, c
 				crossOnePoint(newPopulation[j * 2], newPopulation[(j * 2) + 1]);
 			}
 		}
-
 		for (int j = 0; j < populationSize; j++) {
 			if (happeningProb(rng) <= mutProb) {
-				mutate(newPopulation[j], populationSize);
+				mutate(newPopulation[j]);
 			}
 		}
-		
+
 		// Grading new population
 		for (int j = 0; j < populationSize; j++) {
 			grades[j] = gradeRoute(newPopulation[j]);

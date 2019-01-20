@@ -19,7 +19,7 @@ private:
 	void copyPopulation(int** from, int** to, int * selectedParents, int populationSize);
 	void copyPopulationIntact(int ** from, int ** to, int populationSize);
 	void selectByRoullete(int * grades, int * selection, int populationSize);
-	void mutate(int * route, int populationSize);
+	void mutate(int * route);
 	void swapElements(int * route, int i, int j);
 	void crossOnePoint(int * routeA, int * routeB);
 	int findInArray(int * array, int number);
