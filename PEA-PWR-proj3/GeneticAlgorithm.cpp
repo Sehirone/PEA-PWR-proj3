@@ -383,7 +383,7 @@ void GeneticAlgorithm::solve(const int populationSize, const double crossProb, c
 		if (calculateRouteLength(population[bestFromPop]) < shortestRouteValue) {
 			copyRoute(population[bestFromPop], shortestRoute);
 			shortestRouteValue = calculateRouteLength(population[bestFromPop]);
-			cout << "iteration: " << i << " length: " << shortestRouteValue << endl;
+			cout << i << " " << shortestRouteValue << endl;
 		}
 	}
 
